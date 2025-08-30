@@ -82,95 +82,16 @@ void CHACHA20_BLOCK(const uint32_t in[16], uint32_t out[16])
         out[i] = in[i];
     }
 
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 1
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 2
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 3
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 4
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 5
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 6
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 7
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 8
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 9
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
-
-    QUARTERROUND(out,  0,  4,  8, 12);
-    QUARTERROUND(out,  1,  5,  9, 13);     // 10
-    QUARTERROUND(out,  2,  6, 10, 14);
-    QUARTERROUND(out,  3,  7, 11, 15);
-    QUARTERROUND(out,  0,  5, 10, 15);
-    QUARTERROUND(out,  1,  6, 11, 12);
-    QUARTERROUND(out,  2,  7,  8, 13);
-    QUARTERROUND(out,  3,  4,  9, 14);
+    for (int i = 0; i < 10; i++) {
+        QUARTERROUND(out,  0,  4,  8, 12);      // 1
+        QUARTERROUND(out,  1,  5,  9, 13);      // 2
+        QUARTERROUND(out,  2,  6, 10, 14);      // 3
+        QUARTERROUND(out,  3,  7, 11, 15);      // 4
+        QUARTERROUND(out,  0,  5, 10, 15);      // 5
+        QUARTERROUND(out,  1,  6, 11, 12);      // 6
+        QUARTERROUND(out,  2,  7,  8, 13);      // 7
+        QUARTERROUND(out,  3,  4,  9, 14);      // 8
+    }
 
     for (int i = 0; i < 16; i++) {
         out[i] += in[i];
@@ -179,23 +100,18 @@ void CHACHA20_BLOCK(const uint32_t in[16], uint32_t out[16])
 
 // count: tells serialize how to store the transformed state in the keystream
 //      1: [0]->[63]    2: [64]->[127] ...
-// This is janky as fuck and could use less variables. Should definitely refactor maybe
 // Applies to a block following the block operation
-void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, uint32_t count)
+void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, uint32_t count, unsigned long size)
 {
-    int j = 0;
-    int x = 0;
-    int index = count * 16;
-    int start = index - 16;
-    int offset = (count - 1) * 64;
-    for (int i = start; i < index; i++) {
-        uint32_t cur = state[x];
-        keystream[0 + offset + j] = cur & 0xff;                 // This was my own  way to reorder the bytes
-        keystream[1 + offset + j] = rrot32(cur, 8) & 0xff;      // in little endian order which took me way too
-        keystream[2 + offset + j] = rrot32(cur, 16) & 0xff;     // to understand and implement. Something better
-        keystream[3 + offset + j] = rrot32(cur, 24) & 0xff;     // certainly exists but im proud of it
-        j += 4;
-        x++;
+    unsigned int offset = (count - 1) * 64;
+    unsigned int bytes = (size > 64) ? 64 : size;
+    for (unsigned int i = 0; i < bytes; i += 4) {
+        uint32_t cur = state[i / 4];
+        if (offset + i + 3 >= size) break;
+        keystream[offset + i + 0] = cur & 0xff;                 
+        keystream[offset + i + 1] = rrot32(cur, 8) & 0xff;     
+        keystream[offset + i + 2] = rrot32(cur, 16) & 0xff;    
+        keystream[offset + i + 3] = rrot32(cur, 24) & 0xff;     
     }
 }
 
@@ -218,12 +134,45 @@ void PRINTSERIALIZED(const uint8_t* keystream, size_t size)
 void CHACHA20_XOR(Context* Context, uint32_t* state, uint32_t* count, uint8_t* keystream, uint8_t* plaintext, unsigned long pt_size, uint8_t* ciphertext)
 {
     int size_floored = floor((float)pt_size / 64);
+    printf("\nSIZEFLOORED: %d\n", size_floored);
     for (int i = 0; i < size_floored; i++) {
         CHACHA20_BLOCK(Context->state, state);
-        CHACHA20_SERIALIZE(state, keystream, *count);
+        CHACHA20_SERIALIZE(state, keystream, *count, pt_size);
+        Context->state[12]++;
     }
     for (int y = 0; y < pt_size; y++) {
         ciphertext[y] = plaintext[y] ^ keystream[y];
+    }
+}
+
+void CHACHA20_ENCRYPT(Context* Context, const key256_t key, const nonce96_t nonce, uint8_t* plaintext, unsigned long pt_size)
+{
+    uint32_t count = 1;
+    uint32_t* pCount = &count;
+
+    uint32_t state[16];         // holds adapting state
+    uint8_t* keystream = (uint8_t*)malloc(pt_size * sizeof(uint8_t) + 4);
+    uint8_t* ciphertext = (uint8_t*)malloc(pt_size * sizeof(uint8_t) + 4);
+
+    CHACHA20_INIT(Context, key, nonce, pCount);
+    PRINTBLOCK(Context->state);
+    CHACHA20_BLOCK(Context->state, state);   // Context.state = INITIAL BLOCK (to reference)
+    PRINTBLOCK(state);
+    CHACHA20_SERIALIZE(state, keystream, count, pt_size);
+    // PRINTSERIALIZED(keystream, pt_size);
+    count++;
+    Context->state[12]++;
+    CHACHA20_XOR(Context, state, pCount, keystream, plaintext, pt_size, ciphertext);
+    PRINTSERIALIZED(keystream, pt_size);
+    printf("FREEING\n");
+    free(keystream);
+    free(ciphertext);
+}
+
+void StrToHex(const char* in, uint8_t *out, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        out[i] = (uint8_t)in[i];
     }
 }
 
@@ -237,46 +186,53 @@ int main(void)
         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
     };
     const nonce96_t nonce = {
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x4a,
-        0x00, 0x00, 0x00, 0x00
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
     };
-    uint8_t PLAINTEXT[] = {
-        0x4C, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6E, 0x64, 0x20, 0x47, 0x65, 0x6E, 0x74, 0x6C,
-        0x65, 0x6D, 0x65, 0x6E, 0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x63, 0x6C, 0x61, 0x73,
-        0x73, 0x20, 0x6F, 0x66, 0x20, 0x27, 0x39, 0x39, 0x3A, 0x20, 0x49, 0x66, 0x20, 0x49, 0x20, 0x63,
-        0x6F, 0x75, 0x6C, 0x64, 0x20, 0x6F, 0x66, 0x66, 0x65, 0x72, 0x20, 0x79, 0x6F, 0x75, 0x20, 0x6F,
-        0x6E, 0x6C, 0x79, 0x20, 0x6F, 0x6E, 0x65, 0x20, 0x74, 0x69, 0x70, 0x20, 0x66, 0x6F, 0x72, 0x20,
-        0x74, 0x68, 0x65, 0x20, 0x66, 0x75, 0x74, 0x75, 0x72, 0x65, 0x2C, 0x20, 0x73, 0x75, 0x6E, 0x73,
-        0x63, 0x72, 0x65, 0x65, 0x6E, 0x20, 0x77, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65, 0x20, 0x69,
-        0x74, 0x2E
-    };
-    uint32_t count = 1;
-    uint32_t* pCount = &count;
-    unsigned long pt_size = sizeof(PLAINTEXT);
-    unsigned long pt_size_floored = ceil((float)sizeof(PLAINTEXT) / 64);
-
-    uint32_t state[16];         // holds adapting state
-    uint8_t* keystream = (uint8_t*)malloc(pt_size_floored * 64);
-
+    const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it. Ladies and Gentlemen of the class of '99: If I could jj5akjlsdf 11ua070735zsfasdf";
+    unsigned long pt_len = strlen(msg);
+    printf("%lu\n", pt_len);
+    printf("%lu\n", pt_len * sizeof(uint8_t) + 4);
+    printf("%hhu\n", (uint8_t)pt_len);
+    uint8_t PT[pt_len];
+    StrToHex(msg, PT, pt_len);
     Context Context;
-    uint8_t* ciphertext = (uint8_t*)malloc(pt_size + 1);
-    CHACHA20_INIT(&Context, key, nonce, pCount);
-    PRINTBLOCK(Context.state);
-    CHACHA20_BLOCK(Context.state, state);   // Context.state = INITIAL BLOCK (to reference)
-    PRINTBLOCK(state);
-    CHACHA20_SERIALIZE(state, keystream, count);
-    count++;
-    Context.state[12]++;
-    PRINTSERIALIZED(keystream, sizeof(keystream) * 8);
-    CHACHA20_XOR(&Context, state, pCount, keystream, PLAINTEXT, pt_size, ciphertext);
-    PRINTSERIALIZED(keystream, pt_size);
-    printf("\n");
-    for (int i = 0; i < pt_size; i++) {
-        printf("%c", ciphertext[i]);
-    }
-    printf("\n");
-    free(keystream);
-    free(ciphertext);
+    CHACHA20_ENCRYPT(&Context, key, nonce, PT, pt_len);
+
+    // uint8_t PLAINTEXT[] = {
+    //     0x4C, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6E, 0x64, 0x20, 0x47, 0x65, 0x6E, 0x74, 0x6C,
+    //     0x65, 0x6D, 0x65, 0x6E, 0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x63, 0x6C, 0x61, 0x73,
+    //     0x73, 0x20, 0x6F, 0x66, 0x20, 0x27, 0x39, 0x39, 0x3A, 0x20, 0x49, 0x66, 0x20, 0x49, 0x20, 0x63,
+    //     0x6F, 0x75, 0x6C, 0x64, 0x20, 0x6F, 0x66, 0x66, 0x65, 0x72, 0x20, 0x79, 0x6F, 0x75, 0x20, 0x6F,
+    //     0x6E, 0x6C, 0x79, 0x20, 0x6F, 0x6E, 0x65, 0x20, 0x74, 0x69, 0x70, 0x20, 0x66, 0x6F, 0x72, 0x20,
+    //     0x74, 0x68, 0x65, 0x20, 0x66, 0x75, 0x74, 0x75, 0x72, 0x65, 0x2C, 0x20, 0x73, 0x75, 0x6E, 0x73,
+    //     0x63, 0x72, 0x65, 0x65, 0x6E, 0x20, 0x77, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65, 0x20, 0x69,
+    //     0x74, 0x2E
+    // };
+    // const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
+
+    // unsigned long pt_size = sizeof(PLAINTEXT);
+    // Context Context;
+    // CHACHA20_ENCRYPT(&Context, key, nonce, PLAINTEXT, pt_size);
+    // printf("\n");
+    // free(keystream);
+    // free(ciphertext);
 }
 
+// void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, uint32_t count, unsigned long size)
+// {
+//     int j = 0;
+//     int x = 0;
+//     int index = count * 16;
+//     int start = index - 16;
+//     int offset = (count - 1) * 64;
+//     for (int i = start; i < index; i++) {
+//         uint32_t cur = state[x];
+//         keystream[0 + offset + j] = cur & 0xff;                 // This was my own  way to reorder the bytes
+//         keystream[1 + offset + j] = rrot32(cur, 8) & 0xff;      // in little endian order which took me way too
+//         keystream[2 + offset + j] = rrot32(cur, 16) & 0xff;     // to understand and implement. Something better
+//         keystream[3 + offset + j] = rrot32(cur, 24) & 0xff;     // certainly exists but im proud of it
+//         j += 4;
+//         x++;
+//         if (3 + offset + j > size) break;
+//     }
+// }
