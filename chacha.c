@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,9 +13,9 @@
 
 void PRINTBLOCK(uint32_t *state)
 {
-    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n", (uintptr_t)state[0],  (uintptr_t)state[1], (uintptr_t)state[2], (uintptr_t)state[3]);
-    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n", (uintptr_t)state[4],  (uintptr_t)state[5], (uintptr_t)state[6], (uintptr_t)state[7]);
-    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n", (uintptr_t)state[8],  (uintptr_t)state[9], (uintptr_t)state[10], (uintptr_t)state[11]);
+    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n",   (uintptr_t)state[0],  (uintptr_t)state[1],  (uintptr_t)state[2],  (uintptr_t)state[3]);
+    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n",   (uintptr_t)state[4],  (uintptr_t)state[5],  (uintptr_t)state[6],  (uintptr_t)state[7]);
+    printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n",   (uintptr_t)state[8],  (uintptr_t)state[9],  (uintptr_t)state[10], (uintptr_t)state[11]);
     printf("0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR " 0x%" PRIXPTR "\n\n", (uintptr_t)state[12], (uintptr_t)state[13], (uintptr_t)state[14], (uintptr_t)state[15]);
 }
 
@@ -52,8 +53,11 @@ static uint32_t PACK4(const uint8_t* a) {
     return res;
 }
 
-void CHACHA20_INIT(Context* Context, const key256_t key, const nonce96_t nonce, uint32_t* count)
+void CHACHA20_INIT(Context* Context, uint8_t *key, uint8_t *nonce)
 {
+    memcpy(Context->key, key, sizeof(Context->key));
+    memcpy(Context->nonce, nonce, sizeof(Context->nonce));
+
     Context->state[0]  = PACK4((const uint8_t*)CHACHA20_MAGICSTRING + 0 * 4);
     Context->state[1]  = PACK4((const uint8_t*)CHACHA20_MAGICSTRING + 1 * 4);
     Context->state[2]  = PACK4((const uint8_t*)CHACHA20_MAGICSTRING + 2 * 4);
@@ -66,14 +70,12 @@ void CHACHA20_INIT(Context* Context, const key256_t key, const nonce96_t nonce, 
     Context->state[9]  = PACK4(key + 5 * 4);
     Context->state[10] = PACK4(key + 6 * 4);
     Context->state[11] = PACK4(key + 7 * 4);
-    Context->state[12] = *count;
+    Context->state[12] = 0;
     Context->state[13] = PACK4(nonce + 0 * 4);
     Context->state[14] = PACK4(nonce + 1 * 4);
     Context->state[15] = PACK4(nonce + 2 * 4);
 
     Context->index = 0;
-
-    // PRINTBLOCK(Context->state);
 }
 
 void CHACHA20_BLOCK(const uint32_t in[16], uint32_t out[16])
@@ -98,75 +100,90 @@ void CHACHA20_BLOCK(const uint32_t in[16], uint32_t out[16])
     }
 }
 
+void CHACHA20_CONTEXT_INIT(Context *Context, uint8_t key[], uint8_t nonce[], uint32_t counter, unsigned long ptlen)
+{
+    memset(Context, 0, sizeof(struct Context));
+    CHACHA20_INIT(Context, key, nonce);
+    Context->state[12] = counter;
+    Context->counter = counter;
+    uint8_t* tmp = malloc(ptlen);
+    if (tmp == NULL) {
+        printf("ctx init malloc\n");
+        exit(EXIT_FAILURE);
+    }
+    Context->keystream = tmp;
+}
+
 // count: tells serialize how to store the transformed state in the keystream
 //      1: [0]->[63]    2: [64]->[127] ...
 // Applies to a block following the block operation
-void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, uint32_t count, unsigned long size)
+void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, unsigned long index, unsigned long size)
 {
-    unsigned int offset = (count - 1) * 64;
+    unsigned int offset = index;
     unsigned int bytes = (size > 64) ? 64 : size;
     for (unsigned int i = 0; i < bytes; i += 4) {
         uint32_t cur = state[i / 4];
-        if (offset + i + 3 >= size) break;
-        keystream[offset + i + 0] = cur & 0xff;                 
-        keystream[offset + i + 1] = rrot32(cur, 8) & 0xff;     
-        keystream[offset + i + 2] = rrot32(cur, 16) & 0xff;    
-        keystream[offset + i + 3] = rrot32(cur, 24) & 0xff;     
+        if (offset + i + 0 == size) break;
+        keystream[offset + i + 0] = (cur >> 0) & 0xff;                 
+        if (offset + i + 1 == size) break;
+        keystream[offset + i + 1] = (cur >> 8) & 0xff;     
+        if (offset + i + 2 == size) break;
+        keystream[offset + i + 2] = (cur >> 16) & 0xff;    
+        if (offset + i + 3 == size) break;
+        keystream[offset + i + 3] = (cur >> 24) & 0xff;     
     }
 }
 
 // print a certain amount the keystream
-void PRINTSERIALIZED(const uint8_t* keystream, size_t size)
+void PRINTSERIALIZED(uint8_t* keystream, size_t size)
 {
-    size_t bytes = 0;
-    printf("Serialized:\n%03zu | ", bytes);
-    for (int i = 0; i < size; i++) {
-        printf("%02x ", keystream[i]);
-        if ((i + 1) % 16 == 0) {
-            bytes += 16;
-            printf("\n%03zu | ", bytes);
+    for (size_t i = 0; i < size; i += 16) {
+        printf("  %03zx  ", i);
+
+        // hex
+        for (size_t j = 0; j < 16; ++j) {
+            if (i + j < size) {
+                printf("%02x ", keystream[i + j]);
+            } else {
+                printf("   ");
+            }
         }
+        printf(" ");
+        for (size_t j = 0; j < 16; ++j) {
+            if (i + j < size) {
+                char c = keystream[i + j];
+                printf("%c", isprint((unsigned char)c) ? c : '.');
+            } else {
+                printf(" ");
+            }
+        }
+        printf("\n");
     }
-    printf("\n\n");
+    printf("\n");
 }
 
 // Performs chacha20 on the rest of the plaintext if the initial keystream isnt enough
-void CHACHA20_XOR(Context* Context, uint32_t* state, uint32_t* count, uint8_t* keystream, uint8_t* plaintext, unsigned long pt_size, uint8_t* ciphertext)
+void CHACHA20_XOR(Context* Context, uint8_t* plaintext, unsigned long pt_size)
 {
-    int size_floored = floor((float)pt_size / 64);
-    printf("\nSIZEFLOORED: %d\n", size_floored);
-    for (int i = 0; i < size_floored; i++) {
+    PRINTSERIALIZED(plaintext, pt_size);
+    unsigned long size_ceiled = ceil((float)pt_size / 64);
+    for (int i = 0; i < size_ceiled; i++) {
+        uint32_t state[16];
         CHACHA20_BLOCK(Context->state, state);
-        CHACHA20_SERIALIZE(state, keystream, *count, pt_size);
+        CHACHA20_SERIALIZE(state, Context->keystream, Context->index, pt_size);
+        Context->index += 64;
         Context->state[12]++;
     }
-    for (int y = 0; y < pt_size; y++) {
-        ciphertext[y] = plaintext[y] ^ keystream[y];
+    PRINTSERIALIZED(Context->keystream, pt_size);
+    uint8_t* tmp = malloc(pt_size);
+    if (tmp == NULL) {
+        printf("XOR malloc error\n");
+        exit(EXIT_FAILURE);
     }
-}
-
-void CHACHA20_ENCRYPT(Context* Context, const key256_t key, const nonce96_t nonce, uint8_t* plaintext, unsigned long pt_size)
-{
-    uint32_t count = 1;
-    uint32_t* pCount = &count;
-
-    uint32_t state[16];         // holds adapting state
-    uint8_t* keystream = (uint8_t*)malloc(pt_size * sizeof(uint8_t) + 4);
-    uint8_t* ciphertext = (uint8_t*)malloc(pt_size * sizeof(uint8_t) + 4);
-
-    CHACHA20_INIT(Context, key, nonce, pCount);
-    PRINTBLOCK(Context->state);
-    CHACHA20_BLOCK(Context->state, state);   // Context.state = INITIAL BLOCK (to reference)
-    PRINTBLOCK(state);
-    CHACHA20_SERIALIZE(state, keystream, count, pt_size);
-    // PRINTSERIALIZED(keystream, pt_size);
-    count++;
-    Context->state[12]++;
-    CHACHA20_XOR(Context, state, pCount, keystream, plaintext, pt_size, ciphertext);
-    PRINTSERIALIZED(keystream, pt_size);
-    printf("FREEING\n");
-    free(keystream);
-    free(ciphertext);
+    Context->buffer = tmp;
+    for (int y = 0; y < pt_size; y++) {
+        Context->buffer[y] = plaintext[y] ^ Context->keystream[y];
+    }
 }
 
 void StrToHex(const char* in, uint8_t *out, size_t length)
@@ -179,60 +196,29 @@ void StrToHex(const char* in, uint8_t *out, size_t length)
 // CURRENT TESTING IMPLEMENTATION. 
 int main(void)
 {
-    const key256_t key = {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 
+    uint8_t key[32] = {
+        0xa0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0xf9, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 
         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
     };
-    const nonce96_t nonce = {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
+    uint8_t nonce[12] = {
+        0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
     };
-    const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it. Ladies and Gentlemen of the class of '99: If I could jj5akjlsdf 11ua070735zsfasdf";
-    unsigned long pt_len = strlen(msg);
-    printf("%lu\n", pt_len);
-    printf("%lu\n", pt_len * sizeof(uint8_t) + 4);
-    printf("%hhu\n", (uint8_t)pt_len);
-    uint8_t PT[pt_len];
-    StrToHex(msg, PT, pt_len);
+    uint32_t counter = 0;
     Context Context;
-    CHACHA20_ENCRYPT(&Context, key, nonce, PT, pt_len);
-
-    // uint8_t PLAINTEXT[] = {
-    //     0x4C, 0x61, 0x64, 0x69, 0x65, 0x73, 0x20, 0x61, 0x6E, 0x64, 0x20, 0x47, 0x65, 0x6E, 0x74, 0x6C,
-    //     0x65, 0x6D, 0x65, 0x6E, 0x20, 0x6F, 0x66, 0x20, 0x74, 0x68, 0x65, 0x20, 0x63, 0x6C, 0x61, 0x73,
-    //     0x73, 0x20, 0x6F, 0x66, 0x20, 0x27, 0x39, 0x39, 0x3A, 0x20, 0x49, 0x66, 0x20, 0x49, 0x20, 0x63,
-    //     0x6F, 0x75, 0x6C, 0x64, 0x20, 0x6F, 0x66, 0x66, 0x65, 0x72, 0x20, 0x79, 0x6F, 0x75, 0x20, 0x6F,
-    //     0x6E, 0x6C, 0x79, 0x20, 0x6F, 0x6E, 0x65, 0x20, 0x74, 0x69, 0x70, 0x20, 0x66, 0x6F, 0x72, 0x20,
-    //     0x74, 0x68, 0x65, 0x20, 0x66, 0x75, 0x74, 0x75, 0x72, 0x65, 0x2C, 0x20, 0x73, 0x75, 0x6E, 0x73,
-    //     0x63, 0x72, 0x65, 0x65, 0x6E, 0x20, 0x77, 0x6F, 0x75, 0x6C, 0x64, 0x20, 0x62, 0x65, 0x20, 0x69,
-    //     0x74, 0x2E
-    // };
-    // const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
-
-    // unsigned long pt_size = sizeof(PLAINTEXT);
-    // Context Context;
-    // CHACHA20_ENCRYPT(&Context, key, nonce, PLAINTEXT, pt_size);
-    // printf("\n");
-    // free(keystream);
-    // free(ciphertext);
+    const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
+    uint8_t pt[strlen(msg)];
+    StrToHex(msg, pt, strlen(msg));
+    CHACHA20_CONTEXT_INIT(&Context, key, nonce, counter, strlen(msg));
+    CHACHA20_XOR(&Context, pt, strlen(msg));
+    printf("---ENC'd-----------------------------------------------------------------------------\n\n---DEC'd-----------------------------------------------------------------------------\n");
+    uint8_t* dec = malloc(strlen(msg));
+    for (int x = 0; x < strlen(msg); x++) {
+        dec[x] = Context.buffer[x] ^ Context.keystream[x];
+    }
+    PRINTSERIALIZED(dec, strlen(msg));
+    free(Context.keystream);
+    free(Context.buffer);
 }
 
-// void CHACHA20_SERIALIZE(uint32_t* state, uint8_t* keystream, uint32_t count, unsigned long size)
-// {
-//     int j = 0;
-//     int x = 0;
-//     int index = count * 16;
-//     int start = index - 16;
-//     int offset = (count - 1) * 64;
-//     for (int i = start; i < index; i++) {
-//         uint32_t cur = state[x];
-//         keystream[0 + offset + j] = cur & 0xff;                 // This was my own  way to reorder the bytes
-//         keystream[1 + offset + j] = rrot32(cur, 8) & 0xff;      // in little endian order which took me way too
-//         keystream[2 + offset + j] = rrot32(cur, 16) & 0xff;     // to understand and implement. Something better
-//         keystream[3 + offset + j] = rrot32(cur, 24) & 0xff;     // certainly exists but im proud of it
-//         j += 4;
-//         x++;
-//         if (3 + offset + j > size) break;
-//     }
-// }
