@@ -1,8 +1,8 @@
 Implementing the ChaCha20 Stream Cipher. Choosing C because i think its hard and wanted to check out PQ encryption.
 Currently usable as an included header file, but no command line usage yet. Test program may be compiled with `gcc test.c -o test -lm`. This will print the included message prior to encryption, after encryption, and the decrypted message.
 
-Example implementation
-```
+Example implementation:
+```c
 #include "chacha.h"
 
 uint8_t key[32] = {
