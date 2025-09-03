@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
-#include <byteswap.h>
+// #include <byteswap.h>
 #include <math.h>
 #include "chacha.h"
 
@@ -165,7 +165,7 @@ void PRINTSERIALIZED(uint8_t* keystream, size_t size)
 // Performs chacha20 on the rest of the plaintext if the initial keystream isnt enough
 void CHACHA20_XOR(Context* Context, uint8_t* plaintext, unsigned long pt_size)
 {
-    PRINTSERIALIZED(plaintext, pt_size);
+    // PRINTSERIALIZED(plaintext, pt_size);
     unsigned long size_ceiled = ceil((float)pt_size / 64);
     for (int i = 0; i < size_ceiled; i++) {
         uint32_t state[16];
@@ -174,7 +174,7 @@ void CHACHA20_XOR(Context* Context, uint8_t* plaintext, unsigned long pt_size)
         Context->index += 64;
         Context->state[12]++;
     }
-    PRINTSERIALIZED(Context->keystream, pt_size);
+    // PRINTSERIALIZED(Context->keystream, pt_size);
     uint8_t* tmp = malloc(pt_size);
     if (tmp == NULL) {
         printf("XOR malloc error\n");
@@ -193,32 +193,40 @@ void StrToHex(const char* in, uint8_t *out, size_t length)
     }
 }
 
-// CURRENT TESTING IMPLEMENTATION. 
-int main(void)
+void CHACHA20_DECRYPT(Context* Context, uint8_t* ciphertext, unsigned long pt_size)
 {
-    uint8_t key[32] = {
-        0xa0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0xf9, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 
-        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
-    };
-    uint8_t nonce[12] = {
-        0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
-    };
-    uint32_t counter = 0;
-    Context Context;
-    const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
-    uint8_t pt[strlen(msg)];
-    StrToHex(msg, pt, strlen(msg));
-    CHACHA20_CONTEXT_INIT(&Context, key, nonce, counter, strlen(msg));
-    CHACHA20_XOR(&Context, pt, strlen(msg));
-    printf("---ENC'd-----------------------------------------------------------------------------\n\n---DEC'd-----------------------------------------------------------------------------\n");
-    uint8_t* dec = malloc(strlen(msg));
-    for (int x = 0; x < strlen(msg); x++) {
-        dec[x] = Context.buffer[x] ^ Context.keystream[x];
+    for (int i = 0; i < pt_size; i++) {
+        Context->buffer[i] = ciphertext[i] ^ Context->keystream[i];
     }
-    PRINTSERIALIZED(dec, strlen(msg));
-    free(Context.keystream);
-    free(Context.buffer);
+
 }
+
+// CURRENT TESTING IMPLEMENTATION. 
+// int main(void)
+// {
+//     uint8_t key[32] = {
+//         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+//         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 
+//         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+//         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+//     };
+//     uint8_t nonce[12] = {
+//         0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00
+//     };
+//     uint32_t counter = 0;
+//     Context Context;
+//     const char* msg = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
+//     uint8_t data[strlen(msg)];
+//     StrToHex(msg, data, strlen(msg));
+//     PRINTSERIALIZED(data, sizeof(data));
+//     CHACHA20_CONTEXT_INIT(&Context, key, nonce, counter, sizeof(data)); // CHACHA20_CONTEXT_INIT(&Context, key, nonce, counter, strlen(msg));
+//     CHACHA20_XOR(&Context, data, sizeof(data)); // CHACHA20_XOR(&Context, data, strlen(msg));
+//     PRINTSERIALIZED(Context.buffer, sizeof(data));
+//
+//     CHACHA20_DECRYPT(&Context, Context.buffer, sizeof(data));
+//     PRINTSERIALIZED(Context.buffer, sizeof(data));
+//
+//     free(Context.keystream);
+//     free(Context.buffer);
+// }
 
